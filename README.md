@@ -13,7 +13,9 @@ This is a simple C++ application that provides a GUI for building Unreal Engine 
 3. Click the Build Plugin button.
 
 **Select UE Path** -> Select the version containing your desired engine version. Defaults to default unreal engine installation path. 
+
 **Select .uplugin file** -> Select the .uplugin file of the plugin you want to update
+
 **Select package folder** -> Select an empty folder where the new plugin will be packaged
 
 ## Contributing
