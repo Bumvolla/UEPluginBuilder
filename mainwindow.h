@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#define MAX_GRID_COLUMNS (5)
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
