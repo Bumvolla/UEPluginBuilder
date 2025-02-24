@@ -62,7 +62,10 @@
       <property name="title">
        <string>Select UE Versions</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_2"/>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignJustify|Qt::AlignmentFlag::AlignVCenter</set>
+      </property>
+      <layout class="QGridLayout" name="gridLayout"/>
      </widget>
     </item>
     <item>
