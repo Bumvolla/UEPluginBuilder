@@ -61,7 +61,7 @@ void MainWindow::onBuildPlugin() {
     ui->btnBuild->setEnabled(false);
 
     // Get selected versions
-    QList<QCheckBox*> checkboxes = ui->gridLayout->findChildren<QCheckBox*>();
+    QList<QCheckBox*> checkboxes = ui->versionGroupBox->findChildren<QCheckBox*>(); // Search within versionGroupBox
     bool bIsAnyTrue = false;
 
     for (QCheckBox* checkbox : checkboxes) {
@@ -169,10 +169,10 @@ void MainWindow::addVersionCheckboxes(const QStringList& versions) {
     }
 
     int row = 0;
-    int col = 0;
+    int col = 0; // Adjust the number of columns as needed
 
     for (const auto& version : versions) {
-        QCheckBox* checkbox = new QCheckBox(version, this);
+        QCheckBox* checkbox = new QCheckBox(version, ui->versionGroupBox); // Ensure parent is versionGroupBox
         gridLayout->addWidget(checkbox, row, col, Qt::AlignCenter);
 
         col++;
