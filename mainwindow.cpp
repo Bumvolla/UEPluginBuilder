@@ -247,10 +247,12 @@ void MainWindow::appendToConsole(const QString& text) {
     QTextCharFormat format;
     format.setForeground(Qt::white);
 
-    if (text.contains("error", Qt::CaseSensitive)) {
+    if (text.contains("error", Qt::CaseSensitive) | text.contains("failed", Qt::CaseInsensitive)) {
         format.setForeground(Qt::red);
     } else if (text.contains("warning", Qt::CaseSensitive)) {
         format.setForeground(Qt::darkYellow);
+    }else if (text.contains("SUCCESSFUL", Qt::CaseSensitive) | text.contains("completed", Qt::CaseSensitive) ) {
+        format.setForeground(Qt::green);
     }
 
     // Apply the format to the text
