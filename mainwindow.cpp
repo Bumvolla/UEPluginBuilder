@@ -62,8 +62,11 @@ void MainWindow::onBuildPlugin() {
 
     // Get selected versions
     QList<QCheckBox*> checkboxes = ui->versionGroupBox->findChildren<QCheckBox*>();
+    bool bIsAnyTrue = false;
+
     for (QCheckBox* checkbox : checkboxes) {
         if (checkbox->isChecked()) {
+            bIsAnyTrue = true;
             QString version = checkbox->text();
             QString versionedPackageFolder = packageFolder + "/" + QFileInfo(pluginFile).baseName() + "_" + version;
 
@@ -75,13 +78,32 @@ void MainWindow::onBuildPlugin() {
 
             // Create a QProcess for this build
             QProcess* process = new QProcess(this);
-            connect(process, &QProcess::readyReadStandardOutput, this, [this, process]() {
-                appendToConsole(process->readAllStandardOutput());
+            QString logFilePath = versionedPackageFolder + "/build_log.txt";
+            QFile* logFile = new QFile(logFilePath, this);
+
+            if (!logFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+                appendToConsole("Failed to create log file for version: " + version);
+                delete logFile;
+                continue;
+            }
+
+            // Connect process signals
+            connect(process, &QProcess::readyReadStandardOutput, this, [this, process, logFile]() {
+                QString output = process->readAllStandardOutput();
+                appendToConsole(output);
+                logFile->write(output.toUtf8());
             });
-            connect(process, &QProcess::readyReadStandardError, this, [this, process]() {
-                appendToConsole(process->readAllStandardError());
+
+            connect(process, &QProcess::readyReadStandardError, this, [this, process, logFile]() {
+                QString error = process->readAllStandardError();
+                appendToConsole(error);
+                logFile->write(error.toUtf8());
             });
-            connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [this, process, version](int exitCode, QProcess::ExitStatus exitStatus) {
+
+            connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [this, process, version, logFile](int exitCode, QProcess::ExitStatus exitStatus) {
+                logFile->close();
+                delete logFile;
+
                 if (exitStatus == QProcess::NormalExit && exitCode == 0) {
                     appendToConsole("Build process completed for version: " + version);
                 } else {
@@ -95,13 +117,20 @@ void MainWindow::onBuildPlugin() {
             if (!process->waitForStarted()) {
                 QMessageBox::critical(this, "Error", "Failed to start the build process for version: " + version);
                 process->deleteLater(); // Clean up the process
+                logFile->close();
+                delete logFile;
             }
         }
     }
 
     // Re-enable the build button after all processes are started
     ui->btnBuild->setEnabled(true);
-    appendToConsole("Build process started for all selected versions.");
+
+    if (bIsAnyTrue) {
+        appendToConsole("Build process started for all selected versions.\n");
+    } else {
+        appendToConsole("No version was selected.\n");
+    }
 }
 
 QStringList MainWindow::detectUnrealEngineVersions(const QString& uePath) {
@@ -140,5 +169,19 @@ void MainWindow::addVersionCheckboxes(const QStringList& versions) {
 }
 
 void MainWindow::appendToConsole(const QString& text) {
-    ui->consoleOutput->append(text);
+    QTextCharFormat format;
+    format.setForeground(Qt::white);
+
+    if (text.contains("error", Qt::CaseSensitive)) {
+        format.setForeground(Qt::red);
+    } else if (text.contains("warning", Qt::CaseSensitive)) {
+        format.setForeground(Qt::darkYellow);
+    }
+
+    // Apply the format to the text
+    QTextCursor cursor = ui->consoleOutput->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    cursor.insertText(text, format);
+    ui->consoleOutput->setTextCursor(cursor);
+    ui->consoleOutput->ensureCursorVisible();
 }
