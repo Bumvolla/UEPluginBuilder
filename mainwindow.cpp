@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QProcess>
 #include <QDir>
+#include <QStandardPaths>
 #include <QCheckBox>
 #include <QVBoxLayout>
 
@@ -94,14 +95,14 @@ void MainWindow::onSelectUEPath() {
 }
 
 void MainWindow::onSelectPluginFile() {
-    QString file = QFileDialog::getOpenFileName(this, "Select .uplugin File", "", "Plugin Files (*.uplugin)");
+    QString file = QFileDialog::getOpenFileName(this, "Select .uplugin File", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation), "Plugin Files (*.uplugin)");
     if (!file.isEmpty()) {
         ui->editPluginFile->setText(file);
     }
 }
 
 void MainWindow::onSelectPackageFolder() {
-    QString path = QFileDialog::getExistingDirectory(this, "Select Package Output Folder");
+    QString path = QFileDialog::getExistingDirectory(this, "Select Package Output Folder", QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
     if (!path.isEmpty()) {
         ui->editPackageFolder->setText(path);
     }
@@ -262,3 +263,5 @@ void MainWindow::appendToConsole(const QString& text) {
     ui->consoleOutput->setTextCursor(cursor);
     ui->consoleOutput->ensureCursorVisible();
 }
+
+
