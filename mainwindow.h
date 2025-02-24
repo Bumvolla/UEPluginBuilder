@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QProcess>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -20,11 +19,13 @@ private slots:
     void onSelectPluginFile();
     void onSelectPackageFolder();
     void onBuildPlugin();
-    void readProcessOutput();
 
 private:
     Ui::MainWindow *ui;
-    QProcess *buildProcess;
+
+    QStringList detectUnrealEngineVersions(const QString& uePath);
+    void addVersionCheckboxes(const QStringList& versions);
+    void appendToConsole(const QString& text);
 };
 
 #endif // MAINWINDOW_H

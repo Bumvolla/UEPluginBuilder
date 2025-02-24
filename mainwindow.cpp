@@ -2,15 +2,14 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QTextStream>
+#include <QProcess>
+#include <QDir>
+#include <QCheckBox>
+#include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-
-    // Initialize process
-    buildProcess = new QProcess(this);
-    connect(buildProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readProcessOutput);
 
     // Connect buttons to slots
     connect(ui->btnSelectUEPath, &QPushButton::clicked, this, &MainWindow::onSelectUEPath);
@@ -27,6 +26,10 @@ void MainWindow::onSelectUEPath() {
     QString path = QFileDialog::getExistingDirectory(this, "Select Unreal Engine Installation Path", "C:\\Program Files\\Epic Games");
     if (!path.isEmpty()) {
         ui->editUEPath->setText(path);
+
+        // Detect versions and add checkboxes
+        QStringList versions = detectUnrealEngineVersions(path);
+        addVersionCheckboxes(versions);
     }
 }
 
@@ -45,11 +48,6 @@ void MainWindow::onSelectPackageFolder() {
 }
 
 void MainWindow::onBuildPlugin() {
-    if (buildProcess->state() == QProcess::Running) {
-        QMessageBox::warning(this, "Warning", "Build already in progress!");
-        return;
-    }
-
     QString uePath = ui->editUEPath->text();
     QString pluginFile = ui->editPluginFile->text();
     QString packageFolder = ui->editPackageFolder->text();
@@ -59,25 +57,88 @@ void MainWindow::onBuildPlugin() {
         return;
     }
 
-    // Clear console
-    ui->consoleOutput->clear();
+    // Disable the build button to prevent multiple clicks
+    ui->btnBuild->setEnabled(false);
 
-    // Construct the command
-    QString command = uePath + "/Engine/Build/BatchFiles/RunUAT.bat";
-    QStringList arguments;
-    arguments << "BuildPlugin" << "-plugin=" + pluginFile << "-package=" + packageFolder;
+    // Get selected versions
+    QList<QCheckBox*> checkboxes = ui->versionGroupBox->findChildren<QCheckBox*>();
+    for (QCheckBox* checkbox : checkboxes) {
+        if (checkbox->isChecked()) {
+            QString version = checkbox->text();
+            QString versionedPackageFolder = packageFolder + "/" + QFileInfo(pluginFile).baseName() + "_" + version;
 
-    // Start the process
-    buildProcess->start(command, arguments);
-    if (!buildProcess->waitForStarted()) {
-        QMessageBox::critical(this, "Error", "Failed to start the build process.");
-        return;
+            // Create version-specific output folder
+            QDir().mkpath(versionedPackageFolder);
+
+            // Build command
+            QString command = uePath + "/" + version + "/Engine/Build/BatchFiles/RunUAT.bat BuildPlugin -plugin=\"" + pluginFile + "\" -package=\"" + versionedPackageFolder + "\"";
+
+            // Create a QProcess for this build
+            QProcess* process = new QProcess(this);
+            connect(process, &QProcess::readyReadStandardOutput, this, [this, process]() {
+                appendToConsole(process->readAllStandardOutput());
+            });
+            connect(process, &QProcess::readyReadStandardError, this, [this, process]() {
+                appendToConsole(process->readAllStandardError());
+            });
+            connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [this, process, version](int exitCode, QProcess::ExitStatus exitStatus) {
+                if (exitStatus == QProcess::NormalExit && exitCode == 0) {
+                    appendToConsole("Build process completed for version: " + version);
+                } else {
+                    appendToConsole("Build process failed for version: " + version);
+                }
+                process->deleteLater(); // Clean up the process
+            });
+
+            // Start the build process
+            process->start(command);
+            if (!process->waitForStarted()) {
+                QMessageBox::critical(this, "Error", "Failed to start the build process for version: " + version);
+                process->deleteLater(); // Clean up the process
+            }
+        }
     }
 
-    ui->consoleOutput->append("Build process started...\n");
+    // Re-enable the build button after all processes are started
+    ui->btnBuild->setEnabled(true);
+    appendToConsole("Build process started for all selected versions.");
 }
 
-void MainWindow::readProcessOutput() {
-    QByteArray output = buildProcess->readAllStandardOutput();
-    ui->consoleOutput->append(output);
+QStringList MainWindow::detectUnrealEngineVersions(const QString& uePath) {
+    QDir ueDir(uePath);
+    QStringList versions;
+
+    // Look for directories starting with "UE_"
+    QStringList filters;
+    filters << "UE_*";
+    ueDir.setNameFilters(filters);
+    ueDir.setFilter(QDir::Dirs);
+
+    for (const auto& dir : ueDir.entryList()) {
+        versions.append(dir);
+    }
+
+    return versions;
+}
+
+void MainWindow::addVersionCheckboxes(const QStringList& versions) {
+    // Clear existing checkboxes
+    QLayout* layout = ui->versionGroupBox->layout();
+    if (layout) {
+        QLayoutItem* item;
+        while ((item = layout->takeAt(0))) {
+            delete item->widget();
+            delete item;
+        }
+    }
+
+    // Add new checkboxes
+    for (const auto& version : versions) {
+        QCheckBox* checkbox = new QCheckBox(version, this);
+        ui->versionGroupBox->layout()->addWidget(checkbox);
+    }
+}
+
+void MainWindow::appendToConsole(const QString& text) {
+    ui->consoleOutput->append(text);
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>788</width>
-    <height>509</height>
+    <width>800</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -56,6 +56,14 @@
        <widget class="QLineEdit" name="editPackageFolder"/>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="versionGroupBox">
+      <property name="title">
+       <string>Select UE Versions</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2"/>
+     </widget>
     </item>
     <item>
      <widget class="QPushButton" name="btnBuild">
