@@ -11,6 +11,66 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
+    // Apply stylesheet to the console output
+    ui->consoleOutput->setStyleSheet(R"(
+        QScrollBar:vertical {
+            border: none;
+            background: #2D2D2D;
+            width: 12px;
+            margin: 0px 0px 0px 0px;
+        }
+        QScrollBar::handle:vertical {
+            background: #555555;
+            min-height: 20px;
+            border-radius: 6px;
+        }
+        QScrollBar::add-line:vertical {
+            border: none;
+            background: none;
+            height: 0px;
+            subcontrol-position: bottom;
+            subcontrol-origin: margin;
+        }
+        QScrollBar::sub-line:vertical {
+            border: none;
+            background: none;
+            height: 0px;
+            subcontrol-position: top;
+            subcontrol-origin: margin;
+        }
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+            background: none;
+        }
+        QScrollBar:horizontal {
+            border: none;
+            background: #2D2D2D;
+            height: 12px;
+            margin: 0px 0px 0px 0px;
+        }
+        QScrollBar::handle:horizontal {
+            background: #555555;
+            min-width: 20px;
+            border-radius: 6px;
+        }
+        QScrollBar::add-line:horizontal {
+            border: none;
+            background: none;
+            width: 0px;
+            subcontrol-position: right;
+            subcontrol-origin: margin;
+        }
+        QScrollBar::sub-line:horizontal {
+            border: none;
+            background: none;
+            width: 0px;
+            subcontrol-position: left;
+            subcontrol-origin: margin;
+        }
+        QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+            background: none;
+        }
+    )");
+
     // Connect buttons to slots
     connect(ui->btnSelectUEPath, &QPushButton::clicked, this, &MainWindow::onSelectUEPath);
     connect(ui->btnSelectPluginFile, &QPushButton::clicked, this, &MainWindow::onSelectPluginFile);
