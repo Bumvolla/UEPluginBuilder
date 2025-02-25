@@ -114,7 +114,7 @@ void MainWindow::onBuildPlugin() {
     QString packageFolder = ui->editPackageFolder->text();
 
     if (uePath.isEmpty() || pluginFile.isEmpty() || packageFolder.isEmpty()) {
-        QMessageBox::critical(this, "Error", "Please select UE path, plugin file, and package folder.");
+        QMessageBox::critical(this, "Error", "Please select UE path, plugin file, and package folder.\n");
         return;
     }
 
@@ -143,7 +143,7 @@ void MainWindow::onBuildPlugin() {
             QFile* logFile = new QFile(logFilePath, this);
 
             if (!logFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
-                appendToConsole("Failed to create log file for version: " + version);
+                appendToConsole("Failed to create log file for version: " + version + "\n");
                 delete logFile;
                 continue;
             }
@@ -166,9 +166,9 @@ void MainWindow::onBuildPlugin() {
                 delete logFile;
 
                 if (exitStatus == QProcess::NormalExit && exitCode == 0) {
-                    appendToConsole("Build process completed for version: " + version);
+                    appendToConsole("Build process completed for version: " + version + "\n");
                 } else {
-                    appendToConsole("Build process failed for version: " + version);
+                    appendToConsole("Build process failed for version: " + version + "\n");
                 }
                 process->deleteLater(); // Clean up the process
             });
@@ -176,7 +176,7 @@ void MainWindow::onBuildPlugin() {
             // Start the build process
             process->start(command);
             if (!process->waitForStarted()) {
-                QMessageBox::critical(this, "Error", "Failed to start the build process for version: " + version);
+                QMessageBox::critical(this, "Error", "Failed to start the build process for version: " + version + "\n");
                 process->deleteLater(); // Clean up the process
                 logFile->close();
                 delete logFile;
